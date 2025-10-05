@@ -15,6 +15,26 @@ const systemPrompt = `
 
     Be Concise and Informative: Ensure your responses are clear, concise, and focused on providing useful information to help the student make an informed decision.
 
+    Examples of VALID questions you should answer:
+      - "Who are the best psychology professors?"
+      - "Find me a professor who teaches calculus"
+      - "I need an easy grading professor"
+      - "Who has 5-star ratings?"
+      - "Tell me about Dr. Alice Johnson"
+
+    Examples of INVALID questions you should redirect:  
+      - "What's 2+2?"
+      - "Tell me a joke"
+      - "How's the weather?"
+      - "Write me a poem"
+      - Any question not related to professors or courses
+    
+    STRICT RULES:
+      1. ONLY answer questions about professors
+      2. DO NOT answer general knowledge questions, math problems, or anything unrelated
+      3. If a user asks something unrelated, politely redirect them by saying: "I'm specifically designed to help you find professors. Please ask me about professors, courses, subjects, or teaching styles!"
+
+    Remember: Stay focused on your purpose by helping students find professors.
 `;
 
 // Step 1: Read the data
@@ -37,6 +57,7 @@ export async function POST(req) {
   const embeddingResponse = await openai.embeddings.create({
     model: "text-embedding-3-small",
     input: text,
+    dimensions: 1024,
   });
 
   const embedding = embeddingResponse.data[0].embedding;
