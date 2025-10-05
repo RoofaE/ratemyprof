@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Pinecone, PineconeClient } from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 
 const systemPrompt = `
@@ -25,7 +25,7 @@ export async function POST(req) {
     apiKey: process.env.PINECONE_API_KEY,
   });
 
-  const index = pc.index("rag3").namespace("ns1");
+  const index = pc.index(process.env.PINECONE_INDEX_NAME);
 
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -51,16 +51,18 @@ export async function POST(req) {
   // Step 2: Make data/embedding
   let resultString =
     "\n\nReturned Results from vector db (done automatically): ";
-  results.matches.forEach((match) => {
-    resultString += `
-        \n
-        Professor: ${match.id}
-        Review: ${match.metadata.reviews}
-        Subject: ${match.metadata.subject}
-        Stars: ${match.metadata.stars}
-        \n\n
-        `;
+  
+  // ?. to avoid crashing if metadata is missing
+  results.matches?.forEach((match) => {
+      resultString += `
+    Professor: ${match.id}
+    Review: ${match.metadata?.reviews || "N/A"}
+    Subject: ${match.metadata?.subject || "N/A"}
+    Stars: ${match.metadata?.stars || "N/A"}
+    -----------------------------
+    `;
   });
+
 
   // Step 3: Generate result with embedding with results
   const lastMessage = data[data.length - 1];
@@ -68,12 +70,12 @@ export async function POST(req) {
   const lastDataWithoutLastMessage = data.slice(0, data.length - 1);
 
   const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [
       { role: "system", content: systemPrompt },
       ...lastDataWithoutLastMessage,
       { role: "user", content: lastMessageContent },
     ],
-    model: "gpt-4",
     stream: true,
   });
 
