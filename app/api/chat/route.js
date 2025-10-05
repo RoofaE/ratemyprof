@@ -3,17 +3,18 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 
 const systemPrompt = `
-    You are a helpful and knowledgeable AI assistant designed to help students find the best professors based on their preferences and queries. When a student asks about professors, you use Retrieval-Augmented Generation (RAG) to search through a database of professor reviews and ratings. Your task is to provide the top 3 professors who match the student's criteria, along with brief descriptions of why they are a good fit.
+    You are a Rate My Professor assistant. You help students find professors and learn about available courses.
 
-    For each user question:
+    WHAT YOU CAN HELP WITH:
+    - Finding professors by name, subject, or rating
+    - Listing available courses and subjects
+    - Providing professor reviews and ratings
+    - Recommending professors based on teaching style, difficulty, etc.
 
-    Understand the Query: Carefully interpret the student's question, considering any specific criteria they mention (e.g., subject, teaching style, course difficulty, etc.).
-
-    Retrieve Relevant Information: Use RAG to pull the most relevant information from the database, focusing on professors who meet the criteria specified by the student.
-
-    Present the Top 3 Professors: Provide a list of the top 3 professors, ranked based on their relevance to the student's query. Include the professor's name, department, average rating, and a short description highlighting key points from student reviews (e.g., teaching effectiveness, approachability, course difficulty).
-
-    Be Concise and Informative: Ensure your responses are clear, concise, and focused on providing useful information to help the student make an informed decision.
+    WHAT YOU CANNOT HELP WITH:
+    - General knowledge questions (math problems, definitions, facts)
+    - Personal advice unrelated to academics
+    - Non-academic topics (weather, jokes, news, etc.)
 
     Examples of VALID questions you should answer:
       - "Who are the best psychology professors?"
@@ -29,12 +30,16 @@ const systemPrompt = `
       - "Write me a poem"
       - Any question not related to professors or courses
     
-    STRICT RULES:
-      1. ONLY answer questions about professors
-      2. DO NOT answer general knowledge questions, math problems, or anything unrelated
-      3. If a user asks something unrelated, politely redirect them by saying: "I'm specifically designed to help you find professors. Please ask me about professors, courses, subjects, or teaching styles!"
+    RESPONSE RULES:
+    1. For specific queries (e.g., "best psychology professor"), provide top 3 matches with details
+    2. For broad queries (e.g., "what courses are there?"), list ALL results you receive from the database
+    3. If asked something unrelated to professors/courses, say: "I can only help with finding professors and courses. What would you like to know about our professors or available subjects?"
 
-    Remember: Stay focused on your purpose by helping students find professors.
+    Present information clearly:
+    - Professor name
+    - Subject/Course
+    - Star rating
+    - Key points from reviews
 `;
 
 // Step 1: Read the data
@@ -53,6 +58,14 @@ export async function POST(req) {
 
   const text = data[data.length - 1].content; //convo: last message
 
+  // if user asks a broad question
+  const broadQueryKeywords = ['all professors', 'all profs', 'all courses', 'all subjects', 'what professors are available', 'what courses are available', 'list of professors', 'list of courses', 'list of subjects'];
+  const isBroadQuery = broadQueryKeywords.some(keyword => text.toLowerCase().includes(keyword));
+
+  // uses more results for broad queries, use 10 (wider range of answers), else use 3 (most relevant answers)
+  // how many results to return from Pinecone
+  const topK = isBroadQuery ? 10 : 3;
+
   // Generate embedding
   const embeddingResponse = await openai.embeddings.create({
     model: "text-embedding-3-small",
@@ -62,9 +75,9 @@ export async function POST(req) {
 
   const embedding = embeddingResponse.data[0].embedding;
 
-  // Query Pinecone index
+  // Query Pinecone index WITH dynamic topK (results to return based on broad or specific query)
   const results = await index.query({
-    topK: 3,
+    topK: topK,
     includeMetadata: true,
     vector: embedding,
   });
@@ -77,7 +90,7 @@ export async function POST(req) {
   results.matches?.forEach((match) => {
       resultString += `
     Professor: ${match.id}
-    Review: ${match.metadata?.reviews || "N/A"}
+    Review: ${match.metadata?.review || "N/A"}
     Subject: ${match.metadata?.subject || "N/A"}
     Stars: ${match.metadata?.stars || "N/A"}
     -----------------------------
