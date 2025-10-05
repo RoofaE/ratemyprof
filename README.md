@@ -23,7 +23,7 @@
 <img width="1915" height="946" alt="Image" src="https://github.com/user-attachments/assets/0f82d4e6-0fcf-486a-87a4-428d35a3c702" />
 
 # Contributers 👥
-- Abdurraouf Etagiuri
+- Roofa Etagiuri
 - Sebastien Adam
 - Yusuf
 - Rahat Moktadir 
