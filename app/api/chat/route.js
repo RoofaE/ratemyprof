@@ -90,9 +90,9 @@ export async function POST(req) {
   results.matches?.forEach((match) => {
       resultString += `
     Professor: ${match.id}
-    Review: ${match.metadata?.review || "N/A"}
-    Subject: ${match.metadata?.subject || "N/A"}
-    Stars: ${match.metadata?.stars || "N/A"}
+    Review: ${match.metadata?.review}
+    Subject: ${match.metadata?.subject}
+    Stars: ${match.metadata?.stars}
     -----------------------------
     `;
   });

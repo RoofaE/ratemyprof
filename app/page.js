@@ -74,95 +74,198 @@ export default function Home() {
   }, []);
 
   return (
+  <Box
+    width="100vw"
+    height="100vh"
+    display="flex"
+    flexDirection="column"
+    sx={{
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    }}
+  >
+    {/* Header */}
     <Box
-      width="100vw"
-      height="100vh"
+      width="100%"
+      py={2.5}
+      px={4}
       display="flex"
-      flexDirection="column"
       justifyContent="space-between"
       alignItems="center"
+      sx={{
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+      }}
     >
-      {/* Typing Animation Title */}
-      <Box
-        width="100%"
-        py={2}
-        textAlign="center"
+      <Typography 
+        variant="h5" 
+        sx={{ 
+          color: 'white', 
+          fontWeight: 600,
+          letterSpacing: '-0.3px'
+        }}
       >
-        <Typography variant="h3" className="typing">
-          Rate My Professor AI
-        </Typography>
-          <Button className="signout" onClick={() => router.push("/landingpage")}>Sign Out</Button>
-      </Box>
+        Rate My Professor AI
+      </Typography>
+      <Button 
+        variant="outlined"
+        onClick={() => router.push("/landingpage")}
+        sx={{
+          color: 'white',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+          fontWeight: 500,
+          px: 3,
+          py: 0.75,
+          borderRadius: 10,
+          textTransform: 'none',
+          '&:hover': {
+            borderColor: 'rgba(255, 255, 255, 0.5)',
+            background: 'rgba(255, 255, 255, 0.1)',
+          }
+        }}
+      >
+        Sign Out
+      </Button>
+    </Box>
 
+    {/* Chat Container */}
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      flex={1}
+      p={2}
+    >
       <Stack
         direction="column"
-        width="500px"
-        height="600px"
-        border="1px solid black"
-        borderRadius={8}
-        boxShadow={3}
-        p={2}
-        spacing={3}
-        display="flex"
-        flexDirection="column"
-        bgcolor="white"
+        width="100%"
+        maxWidth="900px"
+        height="85vh"
+        spacing={0}
       >
+        {/* Messages Area */}
         <Stack 
           direction="column" 
-          spacing={2} 
+          spacing={2.5} 
           flexGrow={1} 
           overflow="auto"
-          maxHeight="100%"
+          p={3}
+          sx={{
+            '&::-webkit-scrollbar': {
+              width: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'rgba(255, 255, 255, 0.3)',
+              borderRadius: '10px',
+            },
+          }}
         >
-          {
-            messages.map((message, index) => (
+          {messages.map((message, index) => (
+            <Box 
+              key={index} 
+              display="flex" 
+              justifyContent={message.role === "assistant" ? "flex-start" : "flex-end"}
+              sx={{
+                animation: 'fadeIn 0.3s ease-in',
+                '@keyframes fadeIn': {
+                  from: { opacity: 0, transform: 'translateY(10px)' },
+                  to: { opacity: 1, transform: 'translateY(0)' },
+                },
+              }}
+            >
               <Box 
-                key={index} 
-                display="flex" 
-                justifyContent={
-                  message.role === "assistant" ? "flex-start" : "flex-end"
-                }
+                sx={{
+                  bgcolor: message.role === "assistant" 
+                    ? 'rgba(255, 255, 255, 0.95)' 
+                    : 'rgba(118, 75, 162, 0.9)',
+                  color: message.role === "assistant" ? '#2d3748' : 'white',
+                  borderRadius: message.role === "assistant" 
+                    ? '20px 20px 20px 4px' 
+                    : '20px 20px 4px 20px',
+                  p: 2.5,
+                  maxWidth: "70%",
+                  boxShadow: message.role === "assistant"
+                    ? '0 4px 20px rgba(0, 0, 0, 0.1)'
+                    : '0 4px 20px rgba(118, 75, 162, 0.3)',
+                  wordWrap: 'break-word',
+                  backdropFilter: 'blur(10px)',
+                }}
               >
-                <Box 
-                  bgcolor={
-                    message.role === "assistant" ? "primary.main" : "secondary.main"
-                  }
-                  color="white"
-                  borderRadius={16}
-                  p={2}
-                  maxWidth="80%"
-                  boxShadow={2}
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    lineHeight: 1.6,
+                    fontSize: '0.95rem',
+                  }}
                 >
                   {message.content}
-                </Box>
+                </Typography>
               </Box>
-            ))
-          }
+            </Box>
+          ))}
         </Stack>
-        <Stack direction="row" spacing={2} mt={2}>
-          <TextField
-            label="Type your message..."
-            fullWidth
-            value={message}
-            onChange={(e) => {
-              setMessage(e.target.value);
-            }}
-          />
-          <IconButton color="primary" onClick={sendMessage}>
-            <SendIcon />
-          </IconButton>
-        </Stack>
-      </Stack>
 
-      {/* Footer */}
-      <Box
-        width="100%"
-        py={1}
-        bgcolor="aed49b"
-        color="white"
-        textAlign="center"
-      >
-      </Box>
+        {/* Input Area */}
+        <Box
+          sx={{
+            p: 2,
+            background: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '30px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <TextField
+              placeholder="Ask about professors, courses, or ratings..."
+              fullWidth
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && message.trim()) {
+                  sendMessage();
+                }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '25px',
+                  background: 'transparent',
+                  '& fieldset': {
+                    border: 'none',
+                  },
+                  '& input': {
+                    padding: '14px 20px',
+                  },
+                },
+              }}
+            />
+            <IconButton 
+              onClick={sendMessage}
+              disabled={!message.trim()}
+              sx={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                width: 48,
+                height: 48,
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                  transform: 'scale(1.05)',
+                },
+                '&:disabled': {
+                  background: '#e0e0e0',
+                  color: '#9e9e9e',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <SendIcon />
+            </IconButton>
+          </Stack>
+        </Box>
+      </Stack>
     </Box>
-  );
+  </Box>
+);
 }
