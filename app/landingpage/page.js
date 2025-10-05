@@ -68,7 +68,7 @@ const LandingPage = () => {
         Rate My Professor
       </Typography>
       <Button
-        onClick={() => router.push("/")}
+        onClick={() => router.push("/signup")}
         sx={{
           fontSize: '1rem',
           padding: '0.75rem 1.5rem',
